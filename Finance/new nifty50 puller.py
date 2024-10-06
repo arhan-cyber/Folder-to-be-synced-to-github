@@ -315,6 +315,7 @@ new_df = yf.download(tickers=stocks,
                      end=data.index.get_level_values('date').unique()[-1])
 
 print (new_df)
+print (new_df.columns)
 
 
 
@@ -369,7 +370,7 @@ for start_date in fixed_dates.keys():
         portfolio_df = pd.concat([portfolio_df, temp_df], axis=0)
     
     except Exception as e:
-        print(e)
+        print(f'Error processing {start_date}: {e}')
 
 portfolio_df = portfolio_df.drop_duplicates()
 
