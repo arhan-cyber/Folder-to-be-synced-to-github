@@ -2,8 +2,12 @@ import yfinance as yf
 
 msft = yf.Ticker("BPCL.NS")
 
+info_about = msft.info
+output = '\n'.join(info_about)
+
 # get all stock info
-print (msft.info)
+print (output)
+
 
 # get historical market data
 hist = msft.history(period="1mo")
