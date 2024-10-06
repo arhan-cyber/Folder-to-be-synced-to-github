@@ -69,7 +69,7 @@ data['dollar_volume'] = (data.loc[:, 'dollar_volume'].unstack('ticker').rolling(
 
 data['dollar_vol_rank'] = (data.groupby('date')['dollar_volume'].rank(ascending=False))
 
-data = data[data['dollar_vol_rank']<15].drop(['dollar_volume', 'dollar_vol_rank'], axis=1)
+data = data[data['dollar_vol_rank']<40].drop(['dollar_volume', 'dollar_vol_rank'], axis=1)
 
 
 def calculate_returns(df):
@@ -182,28 +182,61 @@ data = data.dropna()
 
 data.info()
 
-
 from sklearn.cluster import KMeans
-from sklearn.cluster import AgglomerativeClustering
 
-# Perform hierarchical clustering
-hc = AgglomerativeClustering(n_clusters=4)
-hc.fit(data)
+# You don't need to define `initial_centroids` manually. The K-Means++ is selected with init='k-means++'
 
-# Get cluster centers as initial centroids
-initial_centroids = data.groupby(hc.labels_).mean().values
+# def get_clusters(df):
+#     kmeans = KMeans(
+#         n_clusters=4,  # Number of clusters
+#         random_state=0,  # Ensures reproducibility
+#         init='k-means++'  # K-Means++ initialization
+#     )
+    
+#     # Fit the model and assign cluster labels
+#     df['cluster'] = kmeans.fit(df).labels_
+    
+#     return df
 
-data = data.drop('cluster', axis=1, errors='ignore')
+target_rsi_values = [-0.9, -0.3, 0.3, 0.9]
 
+initial_centroids = np.zeros((len(target_rsi_values), 18))
 
+initial_centroids[:, 6] = target_rsi_values
+
+print (initial_centroids)
 def get_clusters(df):
     df['cluster'] = KMeans(n_clusters=4,
                            random_state=0,
                            init=initial_centroids).fit(df).labels_
     return df
-
+# Assuming `data` is already defined
 data = data.dropna().groupby('date', group_keys=False).apply(get_clusters)
-print (data)
+print(data)
+
+
+
+# from sklearn.cluster import KMeans
+# from sklearn.cluster import AgglomerativeClustering
+
+# # Perform hierarchical clustering
+# hc = AgglomerativeClustering(n_clusters=4)
+# hc.fit(data)
+
+# # Get cluster centers as initial centroids
+# initial_centroids = data.groupby(hc.labels_).mean().values
+
+# data = data.drop('cluster', axis=1, errors='ignore')
+
+
+# def get_clusters(df):
+#     df['cluster'] = KMeans(n_clusters=4,
+#                            random_state=0,
+#                            init=initial_centroids).fit(df).labels_
+#     return df
+
+# data = data.dropna().groupby('date', group_keys=False).apply(get_clusters)
+# print (data)
 
 
 def plot_clusters(data):
@@ -230,4 +263,145 @@ for i in data.index.get_level_values('date').unique().tolist():
     
     plt.title(f'Date {i}')
     
-    plot_clusters(g)
+    # plot_clusters(g)
+
+
+
+filtered_df = data[data['cluster']==3].copy()
+
+filtered_df = filtered_df.reset_index(level=1)
+
+filtered_df.index = filtered_df.index+pd.DateOffset(1)
+
+filtered_df = filtered_df.reset_index().set_index(['date', 'ticker'])
+
+dates = filtered_df.index.get_level_values('date').unique().tolist()
+
+fixed_dates = {}
+
+for d in dates:
+    
+    fixed_dates[d.strftime('%Y-%m-%d')] = filtered_df.xs(d, level=0).index.tolist()
+    
+print (fixed_dates)
+
+
+from pypfopt.efficient_frontier import EfficientFrontier
+from pypfopt import risk_models
+from pypfopt import expected_returns
+
+def optimize_weights(prices, lower_bound=0):
+    
+    returns = expected_returns.mean_historical_return(prices=prices,
+                                                      frequency=252)
+    
+    cov = risk_models.sample_cov(prices=prices,
+                                 frequency=252)
+    
+    ef = EfficientFrontier(expected_returns=returns,
+                           cov_matrix=cov,
+                           weight_bounds=(lower_bound, .1),
+                           solver='SCS')
+    
+    weights = ef.max_sharpe()
+    
+    return ef.clean_weights()
+
+
+stocks = data.index.get_level_values('ticker').unique().tolist()
+
+new_df = yf.download(tickers=stocks,
+                     start=data.index.get_level_values('date').unique()[0]-pd.DateOffset(months=12),
+                     end=data.index.get_level_values('date').unique()[-1])
+
+print (new_df)
+
+
+
+returns_dataframe = np.log(new_df['Adj Close']).diff()
+
+portfolio_df = pd.DataFrame()
+
+for start_date in fixed_dates.keys():
+    
+    try:
+
+        end_date = (pd.to_datetime(start_date)+pd.offsets.MonthEnd(0)).strftime('%Y-%m-%d')
+
+        cols = fixed_dates[start_date]
+
+        optimization_start_date = (pd.to_datetime(start_date)-pd.DateOffset(months=12)).strftime('%Y-%m-%d')
+
+        optimization_end_date = (pd.to_datetime(start_date)-pd.DateOffset(days=1)).strftime('%Y-%m-%d')
+        
+        optimization_df = new_df[optimization_start_date:optimization_end_date]['Adj Close'][cols]
+        
+        success = False
+        try:
+            weights = optimize_weights(prices=optimization_df,
+                                   lower_bound=round(1/(len(optimization_df.columns)*2),3))
+
+            weights = pd.DataFrame(weights, index=pd.Series(0))
+            
+            success = True
+        except:
+            print(f'Max Sharpe Optimization failed for {start_date}, Continuing with Equal-Weights')
+        
+        if success==False:
+            weights = pd.DataFrame([1/len(optimization_df.columns) for i in range(len(optimization_df.columns))],
+                                     index=optimization_df.columns.tolist(),
+                                     columns=pd.Series(0)).T
+        
+        temp_df = returns_dataframe[start_date:end_date]
+
+        temp_df = temp_df.stack().to_frame('return').reset_index(level=0)\
+                   .merge(weights.stack().to_frame('weight').reset_index(level=0, drop=True),
+                          left_index=True,
+                          right_index=True)\
+                   .reset_index().set_index(['Date', 'index']).unstack().stack()
+
+        temp_df.index.names = ['date', 'ticker']
+
+        temp_df['weighted_return'] = temp_df['return']*temp_df['weight']
+
+        temp_df = temp_df.groupby(level=0)['weighted_return'].sum().to_frame('Strategy Return')
+
+        portfolio_df = pd.concat([portfolio_df, temp_df], axis=0)
+    
+    except Exception as e:
+        print(e)
+
+portfolio_df = portfolio_df.drop_duplicates()
+
+# Example to check columns in new_df
+print(new_df)
+
+# spy = yf.download(tickers='SPY',
+#                   start='2015-01-01',
+#                   end=dt.date.today())
+
+# spy_ret = np.log(spy[['Adj Close']]).diff().dropna().rename({'Adj Close':'SPY Buy&Hold'}, axis=1)
+
+# portfolio_df = portfolio_df.merge(spy_ret,
+#                                   left_index=True,
+#                                   right_index=True)
+
+# print (portfolio_df)
+
+# import matplotlib.ticker as mtick
+
+# plt.style.use('ggplot')
+
+# portfolio_cumulative_return = np.exp(np.log1p(portfolio_df).cumsum())-1
+
+# portfolio_cumulative_return[:'2024-09-27'].plot(figsize=(16,6))
+
+# plt.title('Unsupervised Learning Trading Strategy Returns Over Time')
+
+# plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter(1))
+
+# plt.ylabel('Return')
+
+# plt.show()
+
+
