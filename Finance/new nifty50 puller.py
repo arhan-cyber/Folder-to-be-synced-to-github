@@ -319,23 +319,27 @@ print (new_df.columns)
 
 
 
-returns_dataframe = np.log(new_df['Adj Close']).diff()
+# Assuming returns_dataframe is still intended to use the same multi-index structure
+returns_dataframe = np.log(new_df['Adj Close']).diff()  # This should work as long as 'Adj Close' is accessed correctly
 
 portfolio_df = pd.DataFrame()
 
 for start_date in fixed_dates.keys():
     
     try:
-
-        end_date = (pd.to_datetime(start_date)+pd.offsets.MonthEnd(0)).strftime('%Y-%m-%d')
+        end_date = (pd.to_datetime(start_date) + pd.offsets.MonthEnd(0)).strftime('%Y-%m-%d')
 
         cols = fixed_dates[start_date]
 
-        optimization_start_date = (pd.to_datetime(start_date)-pd.DateOffset(months=12)).strftime('%Y-%m-%d')
+        optimization_start_date = (pd.to_datetime(start_date) - pd.DateOffset(months=12)).strftime('%Y-%m-%d')
 
-        optimization_end_date = (pd.to_datetime(start_date)-pd.DateOffset(days=1)).strftime('%Y-%m-%d')
-        
-        optimization_df = new_df[optimization_start_date:optimization_end_date]['Adj Close'][cols]
+        optimization_end_date = (pd.to_datetime(start_date) - pd.DateOffset(days=1)).strftime('%Y-%m-%d')
+
+        # Adjusting the DataFrame selection to include all 'Adj Close' tickers for the specified dates
+        optimization_df = new_df.loc[optimization_start_date:optimization_end_date, ('Adj Close', cols)]
+
+        # Proceed with the optimization and portfolio calculations...
+
         
         success = False
         try:
