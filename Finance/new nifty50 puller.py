@@ -313,9 +313,11 @@ new_df = yf.download(tickers=stocks,
                      end=data.index.get_level_values('date').unique()[-1])
 
 print (new_df)
+print(new_df.columns)
 returns_dataframe = np.log(new_df['Adj Close']).diff()
-print (returns_dataframe)
+
 portfolio_df = pd.DataFrame()
+
 for start_date in fixed_dates.keys():
     
     try:
@@ -366,7 +368,9 @@ for start_date in fixed_dates.keys():
         print(e)
 
 portfolio_df = portfolio_df.drop_duplicates()
+
 print (portfolio_df)
+
 
 # import pandas as pd
 # import numpy as np
