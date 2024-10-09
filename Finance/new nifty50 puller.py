@@ -96,13 +96,20 @@ data = data.groupby(level=1, group_keys=False).apply(calculate_returns).dropna()
 
 print (data)
 
-# Assuming 'date' is the first level of your MultiIndex:
-if isinstance(data.index, pd.MultiIndex):
-    # Extract the 'date' level (assuming it's the first level)
-    date_index = data.index.get_level_values('date')  # or use 0 if it's the first level
-    print(date_index.tz)  # This will show None if tz-naive, or the timezone if tz-aware
-else:
-    print(data.index.tz)  # If it's not MultiIndex, check tz directly
+# Assuming 'data' is your DataFrame with a MultiIndex and 'date' is one of the levels.
+date_index = data.index.get_level_values('date')
+
+# Print the current timezone of the index
+print("Current timezone:", date_index.tz)
+
+# Convert the timezone-aware index to timezone-naive
+date_index = date_index.tz_localize(None)
+
+# Print the timezone after conversion
+print("Timezone after conversion:", date_index.tz)
+
+# Display the modified date_index
+print(date_index)
 
 
 
@@ -115,6 +122,10 @@ factor_data.index = factor_data.index.to_timestamp()
 factor_data = factor_data.resample('M').last().div(100)
 
 factor_data.index.name = 'date'
+factordate_index = factor_data.index.get_level_values('date')  # or use 0 if it's the first level
+factordate_index = factordate_index.tz_localize(None)
+print("teimzone of factor data force chaned to:", factordate_index.tz)
+print(factordate_index)
 
 # # Assuming 'date' is the first level of your MultiIndex:
 # if isinstance(factor_data.index, pd.MultiIndex):
@@ -127,25 +138,25 @@ factor_data.index.name = 'date'
 
 
 
-# Convert the date index to UTC if it's tz-naive
-if isinstance(factor_data.index, pd.MultiIndex):
-    # Extract the 'date' level
-    date_index = factor_data.index.get_level_values('date')
-else:
-    date_index = factor_data.index
+# # Convert the date index to UTC if it's tz-naive
+# if isinstance(factor_data.index, pd.MultiIndex):
+#     # Extract the 'date' level
+#     date_index = factor_data.index.get_level_values('date')
+# else:
+#     date_index = factor_data.index
 
-# Check if the index is timezone-naive
-if date_index.tz is None:
-    # Localize to UTC
-    date_index = date_index.tz_localize('UTC')
-    # If you want to replace the index in factor_data
-    if isinstance(factor_data.index, pd.MultiIndex):
-        factor_data.index = factor_data.index.set_levels([date_index] + list(factor_data.index.levels[1:]))
-    else:
-        factor_data.index = date_index
+# # Check if the index is timezone-naive
+# if date_index.tz is None:
+#     # Localize to UTC
+#     date_index = date_index.tz_localize('UTC')
+#     # If you want to replace the index in factor_data
+#     if isinstance(factor_data.index, pd.MultiIndex):
+#         factor_data.index = factor_data.index.set_levels([date_index] + list(factor_data.index.levels[1:]))
+#     else:
+#         factor_data.index = date_index
 
-# Check the updated timezone
-print(factor_data.index.tz)
+# # Check the updated timezone
+# print(factor_data.index.tz)
 
 
 factor_data = factor_data.join(data['return_1m']).sort_index()
