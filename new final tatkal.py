@@ -128,9 +128,27 @@ try:
 
                             # Allow some time for autocomplete suggestions to load if necessary
                             time.sleep(1)
+                            # Wait for the dropdown to be clickable and click it to open
+                            dropdown_trigger = WebDriverWait(driver, 10).until(
+                                EC.element_to_be_clickable((By.ID, 'journeyClass'))
+                            )
+                            dropdown_trigger.click()
+
+                            # Wait for the dropdown options to be visible
+                            dropdown_options = WebDriverWait(driver, 10).until(
+                                EC.visibility_of_element_located((By.CLASS_NAME, 'ui-dropdown-items'))
+                            )
+
+                            # Find the "AC 3 Tier" option and click it
+                            ac_3_tier_option = driver.find_element(By.XPATH, "//li[contains(@aria-label, 'AC 3 Tier (3A)')]")
+                            ac_3_tier_option.click()
+
+                            # Optionally, you can verify if the selection was successful
+                            selected_option = driver.find_element(By.XPATH, "//span[contains(@class, 'ui-dropdown-label')]")
+                            assert "AC 3 Tier (3A)" in selected_option.text
 
                         except Exception as e:
-                            print(f"An error occurred in inputting from location: {e}")    
+                            print(f"An error occurred in inputting from location and selecting third class: {e}")    
                         break  # Exit the inner loop if text is successfully entered
                     except Exception as e:
                         print(f"Error finding captcha input field: {e}")
