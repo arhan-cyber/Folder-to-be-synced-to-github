@@ -5,6 +5,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import base64
+from PIL import Image
+import pytesseract
 
 # Replace these variables with your actual username and password
 username = "your_username"
@@ -12,6 +14,10 @@ password = "your_password"
 
 # Set up the web driver (make sure to specify the correct path to your driver)
 driver = webdriver.Chrome()  # or webdriver.Firefox() for Firefox
+
+# Specify the path to the Tesseract executable
+# Uncomment and modify the line below if Tesseract is not in your PATH
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 try:
     # Open the browser in full-screen mode
@@ -71,6 +77,14 @@ try:
             f.write(image_data)
 
         print("Captcha image saved as captcha.jpg")
+
+        # Perform OCR on the image
+        image = Image.open("captcha.jpg")
+        extracted_text = pytesseract.image_to_string(image)
+
+        # Print the extracted text
+        print("Extracted Text from Captcha:", extracted_text)
+
     except Exception as e:
         print(f"Error finding or saving the captcha image: {e}")
         driver.quit()
