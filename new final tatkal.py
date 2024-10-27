@@ -6,7 +6,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import base64
 
-
 # Replace these variables with your actual username and password
 username = "your_username"
 password = "your_password"
@@ -19,7 +18,7 @@ try:
     driver.maximize_window()
 
     # Open the target URL
-    driver.get("https://www.irctc.co.in/nget/train-search")  # Replace with the actual URL
+    driver.get("URL_OF_YOUR_LOGIN_PAGE")  # Replace with the actual URL
 
     # Wait for the login button to be clickable
     try:
@@ -54,19 +53,35 @@ try:
         driver.quit()
         exit()
 
-    # Optionally, submit the form if there is a submit button
-    # password_field.send_keys(Keys.RETURN)  # Uncomment if needed
+    # Wait for the captcha image to be present
+    try:
+        captcha_img = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "img.captcha-img"))
+        )
+        captcha_src = captcha_img.get_attribute("src")
+
+        # Extract the Base64 data from the src
+        base64_data = captcha_src.split(",")[1]  # Get the part after "data:image/jpg;base64,"
+        
+        # Decode the Base64 data
+        image_data = base64.b64decode(base64_data)
+
+        # Save the image as captcha.jpg
+        with open("captcha.jpg", "wb") as f:
+            f.write(image_data)
+
+        print("Captcha image saved as captcha.jpg")
+    except Exception as e:
+        print(f"Error finding or saving the captcha image: {e}")
+        driver.quit()
+        exit()
 
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 
-
-
-
-
 finally:
     # Wait a moment to see the result (optional)
-    time.sleep(500)
+    time.sleep(5)
 
     # Close the driver
     driver.quit()
