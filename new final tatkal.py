@@ -102,6 +102,19 @@ try:
                             EC.presence_of_element_located((By.CSS_SELECTOR, "input[formcontrolname='captcha']"))
                         )
                         captcha_input.send_keys(extracted_text)  # Input the extracted captcha text
+                        try:
+                            # Wait for the input element to be present using its class
+                            input_element = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.CLASS_NAME, "ng-tns-c57-8"))
+        )
+
+                            # Clear the input field (optional)
+                            input_element.clear()
+
+                            # Input the value "CSMT"
+                            input_element.send_keys("C SHIVAJI MAH T - CSMT (MUMBAI)")
+                        except Exception as e:
+                            print(f"An error occurred: {e}")    
                         break  # Exit the inner loop if text is successfully entered
                     except Exception as e:
                         print(f"Error finding captcha input field: {e}")
