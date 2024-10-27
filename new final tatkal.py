@@ -7,6 +7,7 @@ import time
 import base64
 from PIL import Image
 import pytesseract
+from PIL import ImageEnhance
 
 # Set the path to the Tesseract executable
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Update this path if needed
@@ -79,6 +80,12 @@ try:
 
         # Perform OCR on the image
         image = Image.open("captcha.jpg")
+        # Convert to grayscale
+        image = image.convert("L")
+
+        # Optionally enhance contrast
+        enhancer = ImageEnhance.Contrast(image)
+        image = enhancer.enhance(2.0)  # Adjust the factor as needed
         extracted_text = pytesseract.image_to_string(image)
 
         # Print the extracted text
