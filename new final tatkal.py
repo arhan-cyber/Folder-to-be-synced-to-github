@@ -182,6 +182,15 @@ try:
                             # Optionally, you can verify if the selection was successful
                             selected_option = driver.find_element(By.XPATH, "//span[contains(@class, 'ui-dropdown-label')]")
                             assert "TATKAL" in selected_option.text
+                            # Locate the input field by its ID
+                            input_field = driver.find_element(By.ID, 'jDate')
+
+                            # Clear the input field if necessary
+                            input_field.clear()
+
+                            # Input the date in the specified format (DD/MM/YYYY)
+                            input_field.send_keys('29/10/2024')
+
 
                         except Exception as e:
                             print(f"An error occurred in inputting from location and selecting third class: {e}")    
@@ -204,7 +213,7 @@ except Exception as e:
 
 finally:
     # Wait a moment to see the result (optional)
-    time.sleep(50)
+    time.sleep(500000)
 
     # Close the driver
     # driver.quit()
