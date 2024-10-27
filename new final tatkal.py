@@ -147,6 +147,23 @@ try:
                             selected_option = driver.find_element(By.XPATH, "//span[contains(@class, 'ui-dropdown-label')]")
                             assert "AC 3 Tier (3A)" in selected_option.text
 
+                            dropdown_trigger = WebDriverWait(driver, 10).until(
+                            EC.element_to_be_clickable((By.ID, 'journeyQuota'))
+                            )
+                            dropdown_trigger.click()
+
+                            # Wait for the dropdown options to be visible
+                            # Here, we assume that the options are in a list that can be located by a class name or some other identifier
+                            # You may need to adjust the selector based on your actual HTML structure
+                            tatkal_option = WebDriverWait(driver, 10).until(
+                                EC.element_to_be_clickable((By.XPATH, "//li[contains(text(), 'TATKAL')]"))
+                            )
+                            tatkal_option.click()
+
+                            # Optionally, you can verify if the selection was successful
+                            selected_option = driver.find_element(By.XPATH, "//span[contains(@class, 'ui-dropdown-label')]")
+                            assert "TATKAL" in selected_option.text
+
                         except Exception as e:
                             print(f"An error occurred in inputting from location and selecting third class: {e}")    
                         break  # Exit the inner loop if text is successfully entered
