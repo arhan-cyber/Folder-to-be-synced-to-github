@@ -103,18 +103,34 @@ try:
                         )
                         captcha_input.send_keys(extracted_text)  # Input the extracted captcha text
                         try:
-                            # Wait for the input element to be present using its class
-                            input_element = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.CLASS_NAME, "ng-tns-c57-8"))
-        )
+                               # Allow some time for the page to load
+                            time.sleep(3)
 
-                            # Clear the input field (optional)
-                            input_element.clear()
+                            # Locate the "From" input field by its ID
+                            from_input = driver.find_element(By.ID, 'origin').find_element(By.TAG_NAME, 'input')
 
-                            # Input the value "CSMT"
-                            input_element.send_keys("C SHIVAJI MAH T - CSMT (MUMBAI)")
+                            # Clear the field and input "CSMT"
+                            from_input.clear()
+                            from_input.send_keys('CSMT')
+
+                            # Allow some time for autocomplete suggestions to load if necessary
+                            time.sleep(1)
+
+                            # Press Enter to select the suggestion (if necessary)
+                            from_input.send_keys(Keys.RETURN)
+
+                            # Locate the "To" input field by its ID
+                            to_input = driver.find_element(By.ID, 'destination').find_element(By.TAG_NAME, 'input')
+
+                            # Clear the field and input "NGP"
+                            to_input.clear()
+                            to_input.send_keys('NGP')
+
+                            # Allow some time for autocomplete suggestions to load if necessary
+                            time.sleep(1)
+
                         except Exception as e:
-                            print(f"An error occurred: {e}")    
+                            print(f"An error occurred in inputting from location: {e}")    
                         break  # Exit the inner loop if text is successfully entered
                     except Exception as e:
                         print(f"Error finding captcha input field: {e}")
