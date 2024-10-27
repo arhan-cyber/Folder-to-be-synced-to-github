@@ -13,14 +13,14 @@ from PIL import ImageEnhance
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Update this path if needed
 
 # Replace these variables with your actual username and password
-username = "your_username"
-password = "your_password"
+username = "AkhVen1"
+password = "Arhaanke1@"
 
-while True:  # Start an infinite loop
-    # Set up the web driver (make sure to specify the correct path to your driver)
-    driver = webdriver.Chrome()  # or webdriver.Firefox() for Firefox
+# Set up the web driver
+driver = webdriver.Chrome()  # or webdriver.Firefox() for Firefox
 
-    try:
+try:
+    while True:  # Loop until we get valid extracted text
         # Open the browser in full-screen mode
         driver.maximize_window()
 
@@ -36,7 +36,7 @@ while True:  # Start an infinite loop
         except Exception as e:
             print(f"Error clicking the login button: {e}")
             driver.quit()
-            continue  # Start the loop again
+            exit()
 
         # Wait for the username field to be present using formcontrolname
         try:
@@ -47,7 +47,7 @@ while True:  # Start an infinite loop
         except Exception as e:
             print(f"Error finding the username field: {e}")
             driver.quit()
-            continue  # Start the loop again
+            exit()
 
         # Wait for the password field to be present using formcontrolname
         try:
@@ -58,7 +58,7 @@ while True:  # Start an infinite loop
         except Exception as e:
             print(f"Error finding the password field: {e}")
             driver.quit()
-            continue  # Start the loop again
+            exit()
 
         # Wait for the captcha image to be present
         try:
@@ -80,35 +80,48 @@ while True:  # Start an infinite loop
             print("Captcha image saved as captcha.jpg")
 
             # Perform OCR on the image
-            image = Image.open("captcha.jpg")
-            # Convert to grayscale
-            image = image.convert("L")
+            while True:
+                image = Image.open("captcha.jpg")
+                # Convert to grayscale
+                image = image.convert("L")
 
-            # Optionally enhance contrast
-            enhancer = ImageEnhance.Contrast(image)
-            image = enhancer.enhance(2.0)  # Adjust the factor as needed
-            extracted_text = pytesseract.image_to_string(image)
+                # Optionally enhance contrast
+                enhancer = ImageEnhance.Contrast(image)
+                image = enhancer.enhance(2.0)  # Adjust the factor as needed
+                
+                # Perform OCR
+                extracted_text = pytesseract.image_to_string(image)
 
-            # Print the extracted text
-            print("Extracted Text from Captcha:", extracted_text)
+                # Check if extracted text is non-empty
+                if extracted_text.strip():  # Check if not just whitespace
+                    print("Extracted Text from Captcha:", extracted_text)
 
-            # Check if extracted_text is empty
-            if not extracted_text.strip():  # If extracted_text is empty or only whitespace
-                print("Extracted text is empty. Restarting the process...")
-                driver.quit()
-                continue  # Start the loop again
+                    # Locate the captcha input field and enter the extracted text
+                    try:
+                        captcha_input = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "input[formcontrolname='captcha']"))
+                        )
+                        captcha_input.send_keys(extracted_text)  # Input the extracted captcha text
+                        break  # Exit the inner loop if text is successfully entered
+                    except Exception as e:
+                        print(f"Error finding captcha input field: {e}")
+                        driver.quit()
+                        exit()
+                else:
+                    print("Extracted text is empty, retrying...")
+
+            # Break the outer loop if captcha is successfully solved
+            break  # Exit the outer loop after successful extraction and input
 
         except Exception as e:
             print(f"Error finding or saving the captcha image: {e}")
-            driver.quit()
-            continue  # Start the loop again
 
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
 
-    finally:
-        # Wait a moment to see the result (optional)
-        time.sleep(500)
+finally:
+    # Wait a moment to see the result (optional)
+    time.sleep(500)
 
-        # Close the driver
-        driver.quit()
+    # Close the driver
+    driver.quit()
