@@ -12,7 +12,7 @@ image = image.convert("L")
 # Optionally enhance contrast
 enhancer = ImageEnhance.Contrast(image)
 image = enhancer.enhance(2.0)  # Adjust the factor as needed
-
+image.show()
 # Now perform OCR
 extracted_text = pytesseract.image_to_string(image)
 print("Extracted Text from Captcha:", extracted_text)

@@ -79,17 +79,24 @@ try:
         print("Captcha image saved as captcha.jpg")
 
         # Perform OCR on the image
-        image = Image.open("captcha.jpg")
-        # Convert to grayscale
-        image = image.convert("L")
+        while True:
+            image = Image.open("captcha.jpg")
+            # Convert to grayscale
+            image = image.convert("L")
 
-        # Optionally enhance contrast
-        enhancer = ImageEnhance.Contrast(image)
-        image = enhancer.enhance(2.0)  # Adjust the factor as needed
-        extracted_text = pytesseract.image_to_string(image)
+            # Optionally enhance contrast
+            enhancer = ImageEnhance.Contrast(image)
+            image = enhancer.enhance(2.0)  # Adjust the factor as needed
+            
+            # Perform OCR
+            extracted_text = pytesseract.image_to_string(image)
 
-        # Print the extracted text
-        print("Extracted Text from Captcha:", extracted_text)
+            # Check if extracted text is non-empty
+            if extracted_text.strip():  # Check if not just whitespace
+                print("Extracted Text from Captcha:", extracted_text)
+                break  # Exit the loop if text is found
+            else:
+                print("Extracted text is empty, trying again...")
 
     except Exception as e:
         print(f"Error finding or saving the captcha image: {e}")
@@ -101,7 +108,7 @@ except Exception as e:
 
 finally:
     # Wait a moment to see the result (optional)
-    time.sleep(500)
+    time.sleep(5)
 
     # Close the driver
     driver.quit()
