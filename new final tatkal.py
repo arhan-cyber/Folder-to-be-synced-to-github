@@ -16,11 +16,11 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 username = "your_username"
 password = "your_password"
 
-# Set up the web driver (make sure to specify the correct path to your driver)
-driver = webdriver.Chrome()  # or webdriver.Firefox() for Firefox
+while True:  # Start an infinite loop
+    # Set up the web driver (make sure to specify the correct path to your driver)
+    driver = webdriver.Chrome()  # or webdriver.Firefox() for Firefox
 
-try:
-    while True:  # Loop until we get valid extracted text
+    try:
         # Open the browser in full-screen mode
         driver.maximize_window()
 
@@ -36,7 +36,7 @@ try:
         except Exception as e:
             print(f"Error clicking the login button: {e}")
             driver.quit()
-            exit()
+            continue  # Start the loop again
 
         # Wait for the username field to be present using formcontrolname
         try:
@@ -47,7 +47,7 @@ try:
         except Exception as e:
             print(f"Error finding the username field: {e}")
             driver.quit()
-            exit()
+            continue  # Start the loop again
 
         # Wait for the password field to be present using formcontrolname
         try:
@@ -58,7 +58,7 @@ try:
         except Exception as e:
             print(f"Error finding the password field: {e}")
             driver.quit()
-            exit()
+            continue  # Start the loop again
 
         # Wait for the captcha image to be present
         try:
@@ -80,37 +80,35 @@ try:
             print("Captcha image saved as captcha.jpg")
 
             # Perform OCR on the image
-            while True:
-                image = Image.open("captcha.jpg")
-                # Convert to grayscale
-                image = image.convert("L")
+            image = Image.open("captcha.jpg")
+            # Convert to grayscale
+            image = image.convert("L")
 
-                # Optionally enhance contrast
-                enhancer = ImageEnhance.Contrast(image)
-                image = enhancer.enhance(2.0)  # Adjust the factor as needed
-                
-                # Perform OCR
-                extracted_text = pytesseract.image_to_string(image)
+            # Optionally enhance contrast
+            enhancer = ImageEnhance.Contrast(image)
+            image = enhancer.enhance(2.0)  # Adjust the factor as needed
+            extracted_text = pytesseract.image_to_string(image)
 
-                # Check if extracted text is non-empty
-                if extracted_text.strip():  # Check if not just whitespace
-                    print("Extracted Text from Captcha:", extracted_text)
-                    break  # Exit the inner loop if text is found
-                else:
-                    print("Extracted text is empty, retrying...")
+            # Print the extracted text
+            print("Extracted Text from Captcha:", extracted_text)
 
-            # Break the outer loop if captcha is successfully solved
-            break  # Exit the outer loop after successful extraction
+            # Check if extracted_text is empty
+            if not extracted_text.strip():  # If extracted_text is empty or only whitespace
+                print("Extracted text is empty. Restarting the process...")
+                driver.quit()
+                continue  # Start the loop again
 
         except Exception as e:
             print(f"Error finding or saving the captcha image: {e}")
+            driver.quit()
+            continue  # Start the loop again
 
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
-finally:
-    # Wait a moment to see the result (optional)
-    time.sleep(500)
+    finally:
+        # Wait a moment to see the result (optional)
+        time.sleep(500)
 
-    # Close the driver
-    driver.quit()
+        # Close the driver
+        driver.quit()
