@@ -158,8 +158,8 @@ try:
                             tatkal_option = WebDriverWait(driver, 10).until(
                                 EC.element_to_be_clickable((By.XPATH, "//li[contains(text(), 'TATKAL')]"))
                             )
-                            # tatkal_option.click()
-                            driver.execute_script("arguments[0].click();", tatkal_option)
+                            tatkal_option.click()
+                            # driver.execute_script("arguments[0].click();", tatkal_option)
 
 
                             # Optionally, you can verify if the selection was successful
