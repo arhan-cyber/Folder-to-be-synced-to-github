@@ -8,16 +8,15 @@ import base64
 from PIL import Image
 import pytesseract
 
+# Set the path to the Tesseract executable
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Update this path if needed
+
 # Replace these variables with your actual username and password
 username = "your_username"
 password = "your_password"
 
 # Set up the web driver (make sure to specify the correct path to your driver)
 driver = webdriver.Chrome()  # or webdriver.Firefox() for Firefox
-
-# Specify the path to the Tesseract executable
-# Uncomment and modify the line below if Tesseract is not in your PATH
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 try:
     # Open the browser in full-screen mode
