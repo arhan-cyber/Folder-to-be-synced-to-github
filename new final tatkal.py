@@ -156,12 +156,16 @@ try:
                             # Here, we assume that the options are in a list that can be located by a class name or some other identifier
                             # You may need to adjust the selector based on your actual HTML structure
                                # Wait for the TATKAL option to be visible
+                                # Scroll down using JavaScript
+                            for _ in range(1):  # Adjust the range for more or fewer scrolls
+                                driver.execute_script("window.scrollBy(0, 250);")  # Scroll down 500 pixels
+                                time.sleep(0.5)  # Wait half a second between scrolls
                             tatkal_option = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.XPATH, "//li[contains(text(), 'TATKAL')]"))
+                            EC.presence_of_element_located((By.XPATH, "//li[@aria-label='TATKAL']"))
                             )
 
                             # Scroll to the TATKAL option
-                            driver.execute_script("arguments[0].scrollIntoView(true);", tatkal_option)
+                            # driver.execute_script("arguments[0].scrollIntoView(true);", tatkal_option)
 
                             # Optional: Add a slight delay to ensure the scroll is complete
                             driver.implicitly_wait(1)
