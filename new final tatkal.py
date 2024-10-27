@@ -155,11 +155,24 @@ try:
                             # Wait for the dropdown options to be visible
                             # Here, we assume that the options are in a list that can be located by a class name or some other identifier
                             # You may need to adjust the selector based on your actual HTML structure
+                               # Wait for the TATKAL option to be visible
                             tatkal_option = WebDriverWait(driver, 10).until(
-                                EC.element_to_be_clickable((By.XPATH, "//li[contains(text(), 'TATKAL')]"))
+                            EC.presence_of_element_located((By.XPATH, "//li[contains(text(), 'TATKAL')]"))
                             )
+
+                            # Scroll to the TATKAL option
+                            driver.execute_script("arguments[0].scrollIntoView(true);", tatkal_option)
+
+                            # Optional: Add a slight delay to ensure the scroll is complete
+                            driver.implicitly_wait(1)
+
+                            # Click the TATKAL option
                             tatkal_option.click()
+
+
+                            # Alternatively, click using JavaScript if necessary
                             # driver.execute_script("arguments[0].click();", tatkal_option)
+                            
 
 
                             # Optionally, you can verify if the selection was successful
