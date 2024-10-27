@@ -18,7 +18,7 @@ try:
     driver.maximize_window()
 
     # Open the target URL
-    driver.get("URL_OF_YOUR_LOGIN_PAGE")  # Replace with the actual URL
+    driver.get("https://www.irctc.co.in/nget/train-search")  # Replace with the actual URL
 
     # Wait for the login button to be clickable
     try:
@@ -81,7 +81,7 @@ except Exception as e:
 
 finally:
     # Wait a moment to see the result (optional)
-    time.sleep(5)
+    time.sleep(500)
 
     # Close the driver
     driver.quit()
