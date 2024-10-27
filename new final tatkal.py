@@ -134,7 +134,7 @@ except Exception as e:
 
 finally:
     # Wait a moment to see the result (optional)
-    time.sleep(500)
+    time.sleep(50)
 
     # Close the driver
     driver.quit()
