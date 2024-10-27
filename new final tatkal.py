@@ -20,95 +20,97 @@ password = "your_password"
 driver = webdriver.Chrome()  # or webdriver.Firefox() for Firefox
 
 try:
-    # Open the browser in full-screen mode
-    driver.maximize_window()
+    while True:  # Loop until we get valid extracted text
+        # Open the browser in full-screen mode
+        driver.maximize_window()
 
-    # Open the target URL
-    driver.get("https://www.irctc.co.in/nget/train-search")  # Replace with the actual URL
+        # Open the target URL
+        driver.get("https://www.irctc.co.in/nget/train-search")  # Replace with the actual URL
 
-    # Wait for the login button to be clickable
-    try:
-        login_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "search_btn"))
-        )
-        login_button.click()
-    except Exception as e:
-        print(f"Error clicking the login button: {e}")
-        driver.quit()
-        exit()
+        # Wait for the login button to be clickable
+        try:
+            login_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CLASS_NAME, "search_btn"))
+            )
+            login_button.click()
+        except Exception as e:
+            print(f"Error clicking the login button: {e}")
+            driver.quit()
+            exit()
 
-    # Wait for the username field to be present using formcontrolname
-    try:
-        username_field = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "input[formcontrolname='userid']"))
-        )
-        username_field.send_keys(username)
-    except Exception as e:
-        print(f"Error finding the username field: {e}")
-        driver.quit()
-        exit()
+        # Wait for the username field to be present using formcontrolname
+        try:
+            username_field = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "input[formcontrolname='userid']"))
+            )
+            username_field.send_keys(username)
+        except Exception as e:
+            print(f"Error finding the username field: {e}")
+            driver.quit()
+            exit()
 
-    # Wait for the password field to be present using formcontrolname
-    try:
-        password_field = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "input[formcontrolname='password']"))
-        )
-        password_field.send_keys(password)
-    except Exception as e:
-        print(f"Error finding the password field: {e}")
-        driver.quit()
-        exit()
+        # Wait for the password field to be present using formcontrolname
+        try:
+            password_field = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "input[formcontrolname='password']"))
+            )
+            password_field.send_keys(password)
+        except Exception as e:
+            print(f"Error finding the password field: {e}")
+            driver.quit()
+            exit()
 
-    # Wait for the captcha image to be present
-    try:
-        captcha_img = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "img.captcha-img"))
-        )
-        captcha_src = captcha_img.get_attribute("src")
+        # Wait for the captcha image to be present
+        try:
+            captcha_img = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "img.captcha-img"))
+            )
+            captcha_src = captcha_img.get_attribute("src")
 
-        # Extract the Base64 data from the src
-        base64_data = captcha_src.split(",")[1]  # Get the part after "data:image/jpg;base64,"
-        
-        # Decode the Base64 data
-        image_data = base64.b64decode(base64_data)
-
-        # Save the image as captcha.jpg
-        with open("captcha.jpg", "wb") as f:
-            f.write(image_data)
-
-        print("Captcha image saved as captcha.jpg")
-
-        # Perform OCR on the image
-        while True:
-            image = Image.open("captcha.jpg")
-            # Convert to grayscale
-            image = image.convert("L")
-
-            # Optionally enhance contrast
-            enhancer = ImageEnhance.Contrast(image)
-            image = enhancer.enhance(2.0)  # Adjust the factor as needed
+            # Extract the Base64 data from the src
+            base64_data = captcha_src.split(",")[1]  # Get the part after "data:image/jpg;base64,"
             
-            # Perform OCR
-            extracted_text = pytesseract.image_to_string(image)
+            # Decode the Base64 data
+            image_data = base64.b64decode(base64_data)
 
-            # Check if extracted text is non-empty
-            if extracted_text.strip():  # Check if not just whitespace
-                print("Extracted Text from Captcha:", extracted_text)
-                break  # Exit the loop if text is found
-            else:
-                print("Extracted text is empty, trying again...")
+            # Save the image as captcha.jpg
+            with open("captcha.jpg", "wb") as f:
+                f.write(image_data)
 
-    except Exception as e:
-        print(f"Error finding or saving the captcha image: {e}")
-        driver.quit()
-        exit()
+            print("Captcha image saved as captcha.jpg")
+
+            # Perform OCR on the image
+            while True:
+                image = Image.open("captcha.jpg")
+                # Convert to grayscale
+                image = image.convert("L")
+
+                # Optionally enhance contrast
+                enhancer = ImageEnhance.Contrast(image)
+                image = enhancer.enhance(2.0)  # Adjust the factor as needed
+                
+                # Perform OCR
+                extracted_text = pytesseract.image_to_string(image)
+
+                # Check if extracted text is non-empty
+                if extracted_text.strip():  # Check if not just whitespace
+                    print("Extracted Text from Captcha:", extracted_text)
+                    break  # Exit the inner loop if text is found
+                else:
+                    print("Extracted text is empty, retrying...")
+
+            # Break the outer loop if captcha is successfully solved
+            break  # Exit the outer loop after successful extraction
+
+        except Exception as e:
+            print(f"Error finding or saving the captcha image: {e}")
 
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 
 finally:
     # Wait a moment to see the result (optional)
-    time.sleep(5)
+    time.sleep(500)
 
     # Close the driver
     driver.quit()
